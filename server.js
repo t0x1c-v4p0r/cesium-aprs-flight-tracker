@@ -39,9 +39,10 @@ gnuradio_server.on('connection', function (socket) {
     var longitude = flight_data_json.data.longitude; 
     var altitude = flight_data_json.data.altitude; // in meters
     var timestamp = flight_data_json.data.timestamp;
-    var json_string = JSON.stringify({"callsign":callsign, "longitude":longitude, "latitude":latitude, "height":altitude, "time":timestamp});
+    var comment = flight_data_json.data.comment;
+    var json_string = JSON.stringify({"callsign":callsign, "longitude":longitude, "latitude":latitude, "height":altitude, "time":timestamp, "comment":comment});
     console.log("\x1b[32m", "Parsed  " + json_string, "\x1b[37m"); // output in green
-    io.emit('new_flight_point', {"callsign":callsign, "longitude":longitude, "latitude":latitude, "height":altitude, "time":timestamp}); // Push to webclient
+    io.emit('new_flight_point', {"callsign":callsign, "longitude":longitude, "latitude":latitude, "height":altitude, "time":timestamp, "comment":comment}); // Push to webclient
     fs.appendFileSync("flight_data.json", json_string+'\n'); // Push to database
   });
 

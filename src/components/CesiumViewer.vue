@@ -56,6 +56,14 @@ export default {
         positionProperty.addSample(time, position);
         /*const pointEntity = */ viewer.entities.add({
           description: `Stats: (${flight_point.longitude}, ${flight_point.latitude}, ${flight_point.height})`,
+          label: {
+            text : flight_point.comment,
+            font : '14pt monospace',
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            outlineWidth : 2,
+            verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+            pixelOffset : new Cesium.Cartesian2(0, -9)
+          },
           position: position,
           point: { pixelSize: 10, color: Cesium.Color.RED }
         });
@@ -86,7 +94,7 @@ export default {
     });
 
     // New flight point received from the server
-    socket.on('new_flight_point', (new_flight_point) => {
+    socket.on('new_flight_point', (new_flight_point) => { //new_flight_point is JSON obj
       stop_time = Cesium.JulianDate.addSeconds(Cesium.JulianDate.fromIso8601(new_flight_point.time), 1, new Cesium.JulianDate()); // Required for stop_time > start_time for when we only have 1 data
       const position = Cesium.Cartesian3.fromDegrees(new_flight_point.longitude, new_flight_point.latitude, new_flight_point.height);
       // Store the position along with its timestamp.
@@ -96,6 +104,14 @@ export default {
       // Plot it on the cesium app
       /* const pointEntity = */ viewer.entities.add({
         description: `Location: (${new_flight_point.longitude}, ${new_flight_point.latitude}, ${new_flight_point.height})`,
+        label: {
+          text : new_flight_point.comment,
+          font : '14pt monospace',
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          outlineWidth : 2,
+          verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+          pixelOffset : new Cesium.Cartesian2(0, -9)
+        },
         position: position,
         point: { pixelSize: 10, color: Cesium.Color.RED }
       });
