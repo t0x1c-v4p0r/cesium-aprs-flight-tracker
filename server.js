@@ -2,7 +2,7 @@ const express = require('express');
 const { Server } = require("socket.io");
 const app = express();
 const aprs = require("aprs-parser");
-
+const fs = require("fs");
 var net = require('net');
 
 // var flight_data_db = new JsonDB(new Config("flight_data", true, false, '/'));
@@ -39,10 +39,10 @@ gnuradio_server.on('connection', function (socket) {
     var longitude = flight_data_json.data.longitude; 
     var altitude = flight_data_json.data.altitude; // in meters
     var timestamp = flight_data_json.data.timestamp;
-    console.log("\x1b[32m", "Parsed  " + JSON.stringify({"callsign":callsign, "longitude":longitude, "latitude":latitude, "height":altitude, "time":timestamp}), "\x1b[37m"); // output in green
+    var json_string = JSON.stringify({"callsign":callsign, "longitude":longitude, "latitude":latitude, "height":altitude, "time":timestamp});
+    console.log("\x1b[32m", "Parsed  " + json_string, "\x1b[37m"); // output in green
     io.emit('new_flight_point', {"callsign":callsign, "longitude":longitude, "latitude":latitude, "height":altitude, "time":timestamp}); // Push to webclient
-    // TODO: Push data to webclients and database.
-
+    fs.appendFileSync("flight_data.json", json_string+'\n'); // Push to database
   });
 
   socket.on('drain', function () {
@@ -126,6 +126,8 @@ const io = new Server(server);
 
 io.on('connection', (socket) => {
   console.log('connection')
+  var prev_flight_data = fs.readFileSync("flight_data.json", 'utf-8');
+  io.emit("prev_flight_data", prev_flight_data);
 })
 
 setInterval(() => {
