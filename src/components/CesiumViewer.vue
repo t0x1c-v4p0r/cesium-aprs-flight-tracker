@@ -60,12 +60,12 @@ export default {
           point: { pixelSize: 10, color: Cesium.Color.RED }
         });
       }
+      viewer.clock.currentTime = stop_time.clone(); // current_time should be the latest packet reported. Set current_time before we add a 1sec delay to the stop_time.
       if (stop_time) stop_time = Cesium.JulianDate.addSeconds(stop_time, 1, new Cesium.JulianDate()); // if we only have 1 data point, stop_time > start_time
       if(start_time == null || stop_time == null) return;
       console.log('TEST' + start_time + '; ' + stop_time);
       viewer.clock.startTime = start_time.clone();
       viewer.clock.stopTime = stop_time.clone();
-      viewer.clock.currentTime = stop_time.clone();
       viewer.timeline.zoomTo(start_time, stop_time);
       viewer.clock.shouldAnimate = false;
       balloonEntity = viewer.entities.add({ // add path for flight points we already know.
