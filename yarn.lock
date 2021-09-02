@@ -2430,6 +2430,11 @@ apollo-utilities@^1.0.1, apollo-utilities@^1.3.0:
     ts-invariant "^0.4.0"
     tslib "^1.10.0"
 
+aprs-parser@^1.0.7:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/aprs-parser/-/aprs-parser-1.0.7.tgz#9c451e186975bc51de8b64f8ca126cef9c3b3025"
+  integrity sha512-me+aotv1TrrRlOaBhO64bFyFhLx2Bjs7zF3YKe1zpiauwhoSFMGQKG4WX/zI06f9ZwJiB75P33Jx5dDbLdCN7Q==
+
 arch@^2.1.1:
   version "2.2.0"
   resolved "https://registry.nlark.com/arch/download/arch-2.2.0.tgz#1bc47818f305764f23ab3306b0bfc086c5a29d11"

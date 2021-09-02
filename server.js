@@ -1,13 +1,7 @@
-// const JsonDB = require('node-json-db').JsonDB;
-// const Config = require('node-json-db/dist/lib/JsonDBConfig').Config;
-
 const express = require('express');
 const { Server } = require("socket.io");
 const app = express();
-
-/*const webpack = require('webpack');
-const config = require('../webpack.config.js');
-const compiler = webpack(config);*/
+const aprs = require("aprs-parser");
 
 var net = require('net');
 
@@ -33,22 +27,21 @@ gnuradio_server.on('connection', function (socket) {
   console.log('--------------------------------------------')
 
   socket.on('data', function (new_flight_data) {
-    // flight_data_db.push(Date.now().toString(),JSON.parse(new_flight_data),false);
-    // flight_data_db.save();
-    // TODO: Push data to webclients and database.
-    var bread = socket.bytesRead;
-    var bwrite = socket.bytesWritten;
-    console.log('Bytes read : ' + bread);
-    console.log('Bytes written : ' + bwrite);
-    console.log('Data sent to server : ' + new_flight_data);
-
-    var is_kernel_buffer_full = socket.write('Data ::' + new_flight_data);
-    if (is_kernel_buffer_full) {
-      console.log('Data was flushed successfully from kernel buffer i.e written successfully!');
-    } else {
-      socket.pause();
+    const parser = new aprs.APRSParser();
+    var flight_data_json = parser.parse(new_flight_data);
+    if(flight_data_json.from == null) {
+      // Deal with unparsable APRS packet.
+      console.log("\x1b[31m" , "ERROR Unparsable data: " + new_flight_data, "\x1b[37m"); // output in red
+      return;
     }
-
+    var callsign = flight_data_json.from.call;
+    var latitude = flight_data_json.data.latitude; 
+    var longitude = flight_data_json.data.longitude; 
+    var altitude = flight_data_json.data.altitude; // in meters
+    var timestamp = flight_data_json.data.timestamp;
+    console.log("\x1b[32m", "Parsed  " + JSON.stringify({"callsign":callsign, "longitude":longitude, "latitude":latitude, "height":altitude, "time":timestamp}), "\x1b[37m"); // output in green
+    io.emit('new_flight_point', {"callsign":callsign, "longitude":longitude, "latitude":latitude, "height":altitude, "time":timestamp}); // Push to webclient
+    // TODO: Push data to webclients and database.
 
   });
 
