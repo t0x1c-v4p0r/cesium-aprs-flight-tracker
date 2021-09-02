@@ -75,8 +75,8 @@ export default {
           ]
         ),
         position: positionProperty,
-        point: { pixelSize: 30, color: Cesium.Color.GREEN },
-        //model: { uri: "./CesiumBalloon.glb", maximumScale: 5000},
+        // point: { pixelSize: 30, color: Cesium.Color.GREEN },
+        model: { uri: "./CesiumBalloon.glb", maximumScale: 5000},
         // model: { uri: balloonUri, maximumScale: 5000},
         orientation: new Cesium.VelocityOrientationProperty(positionProperty), 
         path: new Cesium.PathGraphics({ width: 3 })
@@ -121,7 +121,8 @@ export default {
           // model: { uri: balloonUri, maximumScale: 5000},
           orientation: new Cesium.VelocityOrientationProperty(positionProperty), 
           position: positionProperty,
-          point: { pixelSize: 30, color: Cesium.Color.GREEN },
+          // point: { pixelSize: 30, color: Cesium.Color.GREEN },
+          model: { uri: "./CesiumBalloon.glb", maximumScale: 5000},
           path: new Cesium.PathGraphics({ width: 3 })
         });
       }
