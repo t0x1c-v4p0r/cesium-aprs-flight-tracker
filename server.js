@@ -125,7 +125,7 @@ app.use(express.static('dist'))
 
 // Serve the files on port 8000.
 let server = app.listen(8000, function () {
-  console.log('Cesium flight tracker app listening on port 8080!\n');
+  console.log('Cesium flight tracker app listening on port 8000!\n');
 });
 
 const io = new Server(server);
