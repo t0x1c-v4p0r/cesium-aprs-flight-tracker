@@ -3,10 +3,21 @@
 <head>
   <script src="https://cesium.com/downloads/cesiumjs/releases/1.85/Build/Cesium/Cesium.js"></script>
   <link href="https://cesium.com/downloads/cesiumjs/releases/1.85/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
   <div id="cesiumContainer"></div>
   <script>
+    const socket = io();
+
+    socket.on('connect', () => {
+        console.log('connect')
+    })
+
+    socket.on('message', (msg) => {
+      console.log('message:',msg)
+    })
+
     // Your access token can be found at: https://cesium.com/ion/tokens.
     // Replace `your_access_token` with your Cesium ion access token.
     Cesium.Ion.defaultAccessToken = 'your_access_token';
