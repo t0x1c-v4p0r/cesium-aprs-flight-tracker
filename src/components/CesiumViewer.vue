@@ -51,6 +51,7 @@ export default {
         const time = Cesium.JulianDate.fromIso8601(flight_point.time); // Assumes timestamp is in Iso8601.
         const position = Cesium.Cartesian3.fromDegrees(flight_point.longitude, flight_point.latitude, flight_point.height);
         // Store the position along with its timestamp.
+        var comment = new_flight_point.comment.slice(0,-16); // Edit if necessary for your specific mission
         // Here we add the positions all upfront, but these can be added at run-time as samples are received from a server.
         positionProperty.addSample(time, position);
         viewer.entities.add({
