@@ -87,12 +87,6 @@ gnuradio_server.on('connection', function (socket) {
     }
   });
 
-  setTimeout(function () {
-    var isdestroyed = socket.destroyed;
-    console.log('Socket destroyed:' + isdestroyed);
-    socket.destroy();
-  }, 1200000);
-
 }); // end of gnuradio_server on connection
 
 // emits when any error occurs -> calls closed event immediately after this.
