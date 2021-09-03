@@ -91,7 +91,7 @@ gnuradio_server.on('connection', function (socket) {
     var isdestroyed = socket.destroyed;
     console.log('Socket destroyed:' + isdestroyed);
     socket.destroy();
-  }, 1200000);
+  }, 0); // no timeout
 
 }); // end of gnuradio_server on connection
 
