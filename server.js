@@ -138,7 +138,7 @@ const io = new Server(server);
 io.on('connection', (socket) => {
   console.log('connection')
   var prev_flight_data = fs.readFileSync("flight_data.json", 'utf-8');
-  io.emit("prev_flight_data", prev_flight_data);
+  socket.emit("prev_flight_data", prev_flight_data);
 })
 
 setInterval(() => {
