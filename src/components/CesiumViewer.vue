@@ -121,7 +121,7 @@ export default {
         balloonEntity.orientation =  new Cesium.VelocityOrientationProperty(positionProperty);
         // Extend the life of the balloon object
         balloonEntity.availability = new Cesium.TimeIntervalCollection([ new Cesium.TimeInterval({ start: start_time, stop: stop_time}) ]);
-        window.alert("New packet received! Teleporting you over!");
+        // window.alert("New packet received! Teleporting you over!");
         viewer.clock.currentTime = current_time.clone();
         viewer.clock.shouldAnimate = false;
       } else { // For fresh servers without any previous flight data. ie balloonEntity == null && start_time == null.
