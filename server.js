@@ -125,9 +125,9 @@ if (islistening) {
 app.use(require('morgan')('dev'));
 app.use(express.static('dist'))
 
-// Serve the files on port 8000.
-let server = app.listen(8000, function () {
-  console.log('Cesium flight tracker app listening on port 8000!\n');
+// Serve the files on port 80.
+let server = app.listen(80, function () {
+  console.log('Cesium flight tracker app listening on port 80!\n');
 });
 
 const io = new Server(server);
