@@ -68,10 +68,10 @@ export default {
           point: { pixelSize: 10, color: Cesium.Color.RED }
         });
       }
-      viewer.clock.currentTime = stop_time.clone(); // current_time should be the latest packet reported. Set current_time before we add a 1sec delay to the stop_time.
-      if (stop_time) stop_time = Cesium.JulianDate.addSeconds(stop_time, 1, new Cesium.JulianDate()); // if we only have 1 data point, stop_time > start_time
       if(start_time == null || stop_time == null) return;
-      console.log('TEST' + start_time + '; ' + stop_time);
+      viewer.clock.currentTime = stop_time.clone(); // current_time should be the latest packet reported. Set current_time before we add a 1sec delay to the stop_time.
+      stop_time = Cesium.JulianDate.addSeconds(stop_time, 1, new Cesium.JulianDate()); // if we only have 1 data point, stop_time > start_time
+      console.log('Clock interval: ' + start_time + ' to ' + stop_time);
       viewer.clock.startTime = start_time.clone();
       viewer.clock.stopTime = stop_time.clone();
       viewer.timeline.zoomTo(start_time, stop_time);
@@ -95,14 +95,15 @@ export default {
 
     // New flight point received from the server
     socket.on('new_flight_point', (new_flight_point) => { //new_flight_point is JSON obj
-      stop_time = Cesium.JulianDate.addSeconds(Cesium.JulianDate.fromIso8601(new_flight_point.time), 1, new Cesium.JulianDate()); // Required for stop_time > start_time for when we only have 1 data
+      var current_time = Cesium.JulianDate.fromIso8601(new_flight_point.time);
+      stop_time = Cesium.JulianDate.addSeconds(current_time, 1, new Cesium.JulianDate()); // Required for stop_time > start_time for when we only have 1 data
       const position = Cesium.Cartesian3.fromDegrees(new_flight_point.longitude, new_flight_point.latitude, new_flight_point.height);
       // Store the position along with its timestamp.
       // Add at run-time as samples are received from a server.
-      positionProperty.addSample(stop_time, position);
+      positionProperty.addSample(current_time, position);
       viewer.clock.stopTime = stop_time.clone(); // update the stop time
       // Plot it on the cesium app
-      /* const pointEntity = */ viewer.entities.add({
+      const pointEntity = viewer.entities.add({
         description: `Location: (${new_flight_point.longitude}, ${new_flight_point.latitude}, ${new_flight_point.height})`,
         label: {
           text : new_flight_point.comment,
@@ -120,13 +121,14 @@ export default {
         balloonEntity.orientation =  new Cesium.VelocityOrientationProperty(positionProperty);
         // Extend the life of the balloon object
         balloonEntity.availability = new Cesium.TimeIntervalCollection([ new Cesium.TimeInterval({ start: start_time, stop: stop_time}) ]);
-        var current_time = Cesium.JulianDate.fromIso8601(new_flight_point.time);
+        window.alert("New packet received! Teleporting you over!");
         viewer.clock.currentTime = current_time.clone();
+        viewer.clock.shouldAnimate = false;
       } else { // For fresh servers without any previous flight data. ie balloonEntity == null && start_time == null.
-        start_time = Cesium.JulianDate.fromIso8601(new_flight_point.time); // Assumes timestamp is in Iso8601.
-        viewer.clock.startTime = start_time.clone(); // update the stop time
-        viewer.clock.currentTime = start_time.clone(); // update the clock displayed in the GUI
-        viewer.timeline.zoomTo(start_time, stop_time);
+        viewer.clock.startTime = current_time.clone(); // update the stop time
+        viewer.clock.currentTime = current_time.clone(); // update the clock displayed in the GUI
+        viewer.timeline.zoomTo(current_time, stop_time);
+        viewer.flyTo(pointEntity); // Teleport the camera to the first reported position.
         // A balloon object must be created.
         balloonEntity = viewer.entities.add({ // add path for flight points we already know.
           availability: new Cesium.TimeIntervalCollection(
@@ -141,7 +143,6 @@ export default {
           model: { uri: "./CesiumBalloon.glb", maximumScale: 5000},
           path: new Cesium.PathGraphics({ width: 3 })
         });
-        viewer.clock.currentTime = start_time.clone(); // Teleport the balloon to its latest reported position.
         viewer.trackedEntity = balloonEntity;
       }
 

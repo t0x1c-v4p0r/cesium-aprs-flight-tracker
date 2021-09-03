@@ -4,8 +4,11 @@ const app = express();
 const aprs = require("aprs-parser");
 const fs = require("fs");
 var net = require('net');
+require('dotenv').config();
 
-// var flight_data_db = new JsonDB(new Config("flight_data", true, false, '/'));
+
+var tracked_callsign = process.env.VUE_APP_TRACKED_CALLSIGN;
+console.log("Desired callsign target: " + tracked_callsign);
 
 var gnuradio_server = net.createServer();
 //emitted when server closes ...not emitted until all connections closes.
@@ -20,8 +23,8 @@ gnuradio_server.on('connection', function (socket) {
   var raddr = socket.remoteAddress;
   var rfamily = socket.remoteFamily;
 
-  console.log('REMOTE Socket is listening at port' + rport);
-  console.log('REMOTE Socket ip :' + raddr);
+  console.log('REMOTE Socket port: ' + rport);
+  console.log('REMOTE Socket ip : ' + raddr);
   console.log('REMOTE Socket is IP4/IP6 : ' + rfamily);
 
   console.log('--------------------------------------------')
@@ -35,10 +38,17 @@ gnuradio_server.on('connection', function (socket) {
       return;
     }
     var callsign = flight_data_json.from.call;
+    if (callsign != tracked_callsign) {
+      console.log("\x1b[33m%s\x1b[0m" , "WARNING Undesired data: " + new_flight_data, "\x1b[37m"); // output in yellow
+      return;
+    }
     var latitude = flight_data_json.data.latitude; 
     var longitude = flight_data_json.data.longitude; 
     var altitude = flight_data_json.data.altitude; // in meters
     var timestamp = flight_data_json.data.timestamp;
+    if (timestamp == null) { // use system time received if timestamp is not present
+      timestamp = new Date().toISOString();
+    }
     var comment = flight_data_json.data.comment;
     var json_string = JSON.stringify({"callsign":callsign, "longitude":longitude, "latitude":latitude, "height":altitude, "time":timestamp, "comment":comment});
     console.log("\x1b[32m", "Parsed  " + json_string, "\x1b[37m"); // output in green
