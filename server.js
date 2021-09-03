@@ -16,6 +16,8 @@ gnuradio_server.on('close', function () {
   console.log('GNURadio server closed !');
 });
 
+var duplicate_preventer_timestamp_ms = 0;
+var buffer_time_ms = 7000; // To prevent duplicate packets from digipeaters. We expect new packets every 15 sec.
 // emitted when new client connects
 gnuradio_server.on('connection', function (socket) {
   socket.setEncoding("utf8");
@@ -30,6 +32,12 @@ gnuradio_server.on('connection', function (socket) {
   console.log('--------------------------------------------')
 
   socket.on('data', function (new_flight_data) {
+    if(Date.now() - duplicate_preventer_timestamp_ms < buffer_time_ms) {
+      // Likely to be a digipeater
+      console.log("\x1b[33m%s\x1b[0m" , "Likely repeated packet. Ignoring: " + new_flight_data, "\x1b[37m"); // output in yellow
+      return;
+    }
+    duplicate_preventer_timestamp_ms = Date.now();
     const parser = new aprs.APRSParser();
     var flight_data_json = parser.parse(new_flight_data);
     if(flight_data_json.from == null || 
@@ -55,7 +63,7 @@ gnuradio_server.on('connection', function (socket) {
     }
     var comment = flight_data_json.data.comment;
     var json_string = JSON.stringify({"callsign":callsign, "longitude":longitude, "latitude":latitude, "height":altitude, "time":timestamp, "comment":comment});
-    console.log("\x1b[32m", "Parsed  " + json_string, "\x1b[37m"); // output in green
+    console.log("\x1b[32m", "Parsed  " + json_string, "\x1b[37m\n"); // output in green
     io.emit('new_flight_point', {"callsign":callsign, "longitude":longitude, "latitude":latitude, "height":altitude, "time":timestamp, "comment":comment}); // Push to webclient
     fs.appendFileSync("flight_data.json", json_string+'\n'); // Push to database
   });
