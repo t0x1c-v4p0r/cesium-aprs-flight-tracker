@@ -53,8 +53,7 @@ export default {
         // Store the position along with its timestamp.
         // Here we add the positions all upfront, but these can be added at run-time as samples are received from a server.
         positionProperty.addSample(time, position);
-        var comment = flight_point.comment.slice(0,-16); // Edit if necessary for your specific mission
-        /*const pointEntity = */ viewer.entities.add({
+        viewer.entities.add({
           description: `Stats: (${flight_point.longitude}, ${flight_point.latitude}, ${flight_point.height})`,
           label: {
             text : comment,
@@ -89,8 +88,9 @@ export default {
         orientation: new Cesium.VelocityOrientationProperty(positionProperty), 
         path: new Cesium.PathGraphics({ width: 3 })
       });
-      // Make the camera track the balloon.
-      viewer.trackedEntity = balloonEntity;
+      viewer.trackedEntity = undefined;
+      // Make the camera fly to the balloon.
+      viewer.flyTo(balloonEntity);
     });
 
     // New flight point received from the server
@@ -104,7 +104,7 @@ export default {
       viewer.clock.stopTime = stop_time.clone(); // update the stop time
       var comment = new_flight_point.comment.slice(0,-16); // Edit if necessary for your specific mission
       // Plot it on the cesium app
-      const pointEntity = viewer.entities.add({
+      viewer.entities.add({
         description: `Location: (${new_flight_point.longitude}, ${new_flight_point.latitude}, ${new_flight_point.height})`,
         label: {
           text : comment,
@@ -123,13 +123,12 @@ export default {
         // Extend the life of the balloon object
         balloonEntity.availability = new Cesium.TimeIntervalCollection([ new Cesium.TimeInterval({ start: start_time, stop: stop_time}) ]);
         // window.alert("New packet received! Teleporting you over!");
-        viewer.clock.currentTime = current_time.clone();
         viewer.clock.shouldAnimate = false;
+        viewer.clock.currentTime = current_time.clone();
       } else { // For fresh servers without any previous flight data. ie balloonEntity == null && start_time == null.
         viewer.clock.startTime = current_time.clone(); // update the stop time
         viewer.clock.currentTime = current_time.clone(); // update the clock displayed in the GUI
         viewer.timeline.zoomTo(current_time, stop_time);
-        viewer.flyTo(pointEntity); // Teleport the camera to the first reported position.
         // A balloon object must be created.
         balloonEntity = viewer.entities.add({ // add path for flight points we already know.
           availability: new Cesium.TimeIntervalCollection(
@@ -144,9 +143,9 @@ export default {
           model: { uri: "./CesiumBalloon.glb", maximumScale: 5000},
           path: new Cesium.PathGraphics({ width: 3 })
         });
-        viewer.trackedEntity = balloonEntity;
       }
-
+      viewer.trackedEntity = undefined;
+      viewer.flyTo(balloonEntity); // Teleport the camera to the balloon
     });
   }
 }
