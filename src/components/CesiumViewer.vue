@@ -35,16 +35,17 @@ export default {
 
     var start_time = null; // for two different socket callbacks to manipulate the start time of the animation
     var stop_time = null; // for two different socket callbacks to manipulate the stop time of the animation
+    var current_time = null; // for two different socket callbacks to manipulate the current time of the animation
     var balloonEntity = null; // for two different socket callbacks to manipulate the entity that models the position of the balloon
 
     // On fresh reload, get existing flight data from the server to plot
     socket.on('prev_flight_data', (prev_flight_points) => {
       if (prev_flight_points == null) return;
       prev_flight_points = prev_flight_points.split('\n');
-      for(var i=0; i<prev_flight_points.length-1; i++) {
-        if(prev_flight_points[i]=="") continue;
-        if(i==0) start_time = Cesium.JulianDate.fromIso8601(JSON.parse(prev_flight_points[0]).time); // Assumes timestamp is in Iso8601.
-        stop_time = Cesium.JulianDate.fromIso8601(JSON.parse(prev_flight_points[i]).time); // Update the stop time until we reach the last timestamp
+      for(var i=0; i<prev_flight_points.length; i++) {
+        if(prev_flight_points[i]=="") continue; // Ignore empty strings from the delimiter split
+        if(start_time==null) start_time = Cesium.JulianDate.fromIso8601(JSON.parse(prev_flight_points[i]).time); // Take the first flight data point as the start point. Assumes flight data is in order.
+        current_time = Cesium.JulianDate.fromIso8601(JSON.parse(prev_flight_points[i]).time); // Update the current time until we reach the last timestamp
         var flight_point = JSON.parse(prev_flight_points[i]);
         console.log(i, ': ', flight_point);
         // Declare the time for this individual sample and store it in a new JulianDate instance.
@@ -55,7 +56,7 @@ export default {
         // Here we add the positions all upfront, but these can be added at run-time as samples are received from a server.
         positionProperty.addSample(time, position);
         viewer.entities.add({
-          description: `Stats: (${flight_point.longitude}, ${flight_point.latitude}, ${flight_point.height})`,
+          description: `Location: (${flight_point.longitude}, ${flight_point.latitude}, ${flight_point.height})`,
           label: {
             text : comment,
             font : '14pt monospace',
@@ -68,9 +69,9 @@ export default {
           point: { pixelSize: 10, color: Cesium.Color.RED }
         });
       }
-      if(start_time == null || stop_time == null) return;
-      viewer.clock.currentTime = stop_time.clone(); // current_time should be the latest packet reported. Set current_time before we add a 1sec delay to the stop_time.
-      stop_time = Cesium.JulianDate.addSeconds(stop_time, 1, new Cesium.JulianDate()); // if we only have 1 data point, stop_time > start_time
+      if(start_time == null || current_time == null) return; // For the case that there is no previous flight data
+      viewer.clock.currentTime = current_time.clone(); // current_time should be the latest packet reported. Set current_time before we add a 1sec delay to the stop_time.
+      stop_time = Cesium.JulianDate.addSeconds(current_time, 1, new Cesium.JulianDate()); // if we only have 1 data point, stop_time > start_time
       console.log('Clock interval: ' + start_time + ' to ' + stop_time);
       viewer.clock.startTime = start_time.clone();
       viewer.clock.stopTime = stop_time.clone();
@@ -96,14 +97,12 @@ export default {
 
     // New flight point received from the server
     socket.on('new_flight_point', (new_flight_point) => { //new_flight_point is JSON obj
-      var current_time = Cesium.JulianDate.fromIso8601(new_flight_point.time);
-      stop_time = Cesium.JulianDate.addSeconds(current_time, 1, new Cesium.JulianDate()); // Required for stop_time > start_time for when we only have 1 data
+      current_time = Cesium.JulianDate.fromIso8601(new_flight_point.time);
       const position = Cesium.Cartesian3.fromDegrees(new_flight_point.longitude, new_flight_point.latitude, new_flight_point.height);
       // Store the position along with its timestamp.
+      var comment = new_flight_point.comment.slice(0,-16); // Edit if necessary for your specific mission
       // Add at run-time as samples are received from a server.
       positionProperty.addSample(current_time, position);
-      viewer.clock.stopTime = stop_time.clone(); // update the stop time
-      var comment = new_flight_point.comment.slice(0,-16); // Edit if necessary for your specific mission
       // Plot it on the cesium app
       viewer.entities.add({
         description: `Location: (${new_flight_point.longitude}, ${new_flight_point.latitude}, ${new_flight_point.height})`,
@@ -119,17 +118,20 @@ export default {
         point: { pixelSize: 10, color: Cesium.Color.RED }
       });
       if (balloonEntity != null) { // Where there are data already present in Cesium before new data is entered.
+        var revd_pkt_stop_time = Cesium.JulianDate.addSeconds(current_time, 1, new Cesium.JulianDate()); // Required for stop_time > start_time
+        if(Cesium.JulianDate.compare(revd_pkt_stop_time, stop_time) > 0) {
+          stop_time = revd_pkt_stop_time.clone(); // Incase flight data is sent in the wrong order.
+        }
         balloonEntity.position = positionProperty; // Update the path of the balloon object
         balloonEntity.orientation =  new Cesium.VelocityOrientationProperty(positionProperty);
         // Extend the life of the balloon object
         balloonEntity.availability = new Cesium.TimeIntervalCollection([ new Cesium.TimeInterval({ start: start_time, stop: stop_time}) ]);
         // window.alert("New packet received! Teleporting you over!");
         viewer.clock.shouldAnimate = false;
-        viewer.clock.currentTime = current_time.clone();
       } else { // For fresh servers without any previous flight data. ie balloonEntity == null && start_time == null.
-        viewer.clock.startTime = current_time.clone(); // update the stop time
-        viewer.clock.currentTime = current_time.clone(); // update the clock displayed in the GUI
-        viewer.timeline.zoomTo(current_time, stop_time);
+        stop_time = Cesium.JulianDate.addSeconds(current_time, 1, new Cesium.JulianDate()); // Required for stop_time > start_time
+        viewer.clock.startTime = current_time.clone(); // define the start time
+        viewer.timeline.zoomTo(current_time, stop_time); // in this special case, the current_time is also the start_time
         // A balloon object must be created.
         balloonEntity = viewer.entities.add({ // add path for flight points we already know.
           availability: new Cesium.TimeIntervalCollection(
@@ -145,7 +147,9 @@ export default {
           path: new Cesium.PathGraphics({ width: 3 })
         });
       }
-      viewer.trackedEntity = undefined;
+      viewer.clock.currentTime = current_time.clone(); // update the clock displayed in the GUI
+      viewer.clock.stopTime = stop_time.clone(); // update the stop time
+      viewer.trackedEntity = undefined; // Untrack any objects to make the camera flight transition smooth
       viewer.flyTo(balloonEntity); // Teleport the camera to the balloon
     });
   }

@@ -32,8 +32,12 @@ gnuradio_server.on('connection', function (socket) {
   socket.on('data', function (new_flight_data) {
     const parser = new aprs.APRSParser();
     var flight_data_json = parser.parse(new_flight_data);
-    if(flight_data_json.from == null) {
-      // Deal with unparsable APRS packet.
+    if(flight_data_json.from == null || 
+       flight_data_json.data == null || 
+       flight_data_json.data.latitude == null ||
+       flight_data_json.data.longitude == null ||
+       flight_data_json.data.altitude == null) {
+      // ARPS without a callsign origin, latitude, longitude and altitude to be discarded.
       console.log("\x1b[31m" , "ERROR Unparsable data: " + new_flight_data, "\x1b[37m"); // output in red
       return;
     }
@@ -86,12 +90,6 @@ gnuradio_server.on('connection', function (socket) {
       console.log('Socket was closed coz of transmission error');
     }
   });
-
-  setTimeout(function () {
-    var isdestroyed = socket.destroyed;
-    console.log('Socket destroyed:' + isdestroyed);
-    socket.destroy();
-  }, 0); // no timeout
 
 }); // end of gnuradio_server on connection
 
