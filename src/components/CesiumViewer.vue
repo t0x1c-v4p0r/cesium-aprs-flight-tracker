@@ -23,7 +23,6 @@ export default {
       console.log('message:',msg)
     })
 
-    // const balloonUri = Cesium.IonResource.fromAssetId(585832/*process.env.VUE_APP_BALLOON_MODEL*/);
     Cesium.Ion.defaultAccessToken = process.env.VUE_APP_ACCESS_TOKEN
 
     var viewer = new Cesium.Viewer('cesiumContainer', {
@@ -54,10 +53,11 @@ export default {
         // Store the position along with its timestamp.
         // Here we add the positions all upfront, but these can be added at run-time as samples are received from a server.
         positionProperty.addSample(time, position);
+        var comment = flight_point.comment.slice(0,-16); // Edit if necessary for your specific mission
         /*const pointEntity = */ viewer.entities.add({
           description: `Stats: (${flight_point.longitude}, ${flight_point.latitude}, ${flight_point.height})`,
           label: {
-            text : flight_point.comment,
+            text : comment,
             font : '14pt monospace',
             style: Cesium.LabelStyle.FILL_AND_OUTLINE,
             outlineWidth : 2,
@@ -102,11 +102,12 @@ export default {
       // Add at run-time as samples are received from a server.
       positionProperty.addSample(current_time, position);
       viewer.clock.stopTime = stop_time.clone(); // update the stop time
+      var comment = new_flight_point.comment.slice(0,-16); // Edit if necessary for your specific mission
       // Plot it on the cesium app
       const pointEntity = viewer.entities.add({
         description: `Location: (${new_flight_point.longitude}, ${new_flight_point.latitude}, ${new_flight_point.height})`,
         label: {
-          text : new_flight_point.comment,
+          text : comment,
           font : '14pt monospace',
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
           outlineWidth : 2,
