@@ -54,7 +54,6 @@ export default {
         var comment = flight_point.comment.slice(0,-16); // Edit if necessary for your specific mission
         // Here we add the positions all upfront, but these can be added at run-time as samples are received from a server.
         positionProperty.addSample(time, position);
-        var comment = flight_point.comment.slice(0,-16); // Edit if necessary for your specific mission
         viewer.entities.add({
           description: `Stats: (${flight_point.longitude}, ${flight_point.latitude}, ${flight_point.height})`,
           label: {
