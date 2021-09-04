@@ -29,7 +29,8 @@ export default {
         sceneMode : Cesium.SceneMode.SCENE3D,
         terrainProvider: Cesium.createWorldTerrain({
           requestVertexNormals: true
-        })
+        }),
+        scene3DOnly: true
     });
 
     //viewer.scene.primitives.add(Cesium.createOsmBuildings());
