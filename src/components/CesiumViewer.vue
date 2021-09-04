@@ -26,10 +26,14 @@ export default {
     Cesium.Ion.defaultAccessToken = process.env.VUE_APP_ACCESS_TOKEN
 
     var viewer = new Cesium.Viewer('cesiumContainer', {
-        terrainProvider: Cesium.createWorldTerrain()
+        sceneMode : Cesium.SceneMode.SCENE3D,
+        terrainProvider: Cesium.createWorldTerrain({
+          requestVertexNormals: true
+        }),
+        scene3DOnly: true
     });
 
-    viewer.scene.primitives.add(Cesium.createOsmBuildings());
+    //viewer.scene.primitives.add(Cesium.createOsmBuildings());
     // The SampledPositionedProperty stores the position and timestamp for each sample along the radar sample series.
     const positionProperty = new Cesium.SampledPositionProperty();
 
