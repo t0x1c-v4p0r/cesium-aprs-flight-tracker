@@ -27,7 +27,8 @@ export default {
     Cesium.Ion.defaultAccessToken = process.env.VUE_APP_ACCESS_TOKEN
 
     var viewer = new Cesium.Viewer('cesiumContainer', {
-        terrainProvider: Cesium.createWorldTerrain()
+        terrainProvider: Cesium.createWorldTerrain(),
+        scene3DOnly: true
     });
 
     viewer.scene.primitives.add(Cesium.createOsmBuildings());
