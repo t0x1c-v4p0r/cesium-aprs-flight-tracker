@@ -30,7 +30,7 @@ export default {
         terrainProvider: Cesium.createWorldTerrain({
           requestVertexNormals: true
         }),
-        scene3DOnly: true
+        scene3DOnly: false // Enable 2D and Columbus View
     });
 
     //viewer.scene.primitives.add(Cesium.createOsmBuildings());
