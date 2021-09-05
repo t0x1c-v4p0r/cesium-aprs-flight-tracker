@@ -23,7 +23,6 @@ export default {
       console.log('message:',msg)
     })
 
-    // const balloonUri = Cesium.IonResource.fromAssetId(585832/*process.env.VUE_APP_BALLOON_MODEL*/);
     Cesium.Ion.defaultAccessToken = process.env.VUE_APP_ACCESS_TOKEN
 
     var viewer = new Cesium.Viewer('cesiumContainer', {
