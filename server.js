@@ -111,8 +111,6 @@ gnuradio_server.on('listening', function () {
   console.log('Server is listening!');
 });
 
-gnuradio_server.maxConnections = 1;
-
 //static port allocation
 gnuradio_server.listen(3000, '0.0.0.0');
 
