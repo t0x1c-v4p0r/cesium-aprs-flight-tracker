@@ -28,10 +28,10 @@ export default {
 
     var viewer = new Cesium.Viewer('cesiumContainer', {
         terrainProvider: Cesium.createWorldTerrain(),
-        scene3DOnly: true
+        scene3DOnly: false // Enable 2D and Columbus View
     });
 
-    viewer.scene.primitives.add(Cesium.createOsmBuildings());
+    // viewer.scene.primitives.add(Cesium.createOsmBuildings());
     // The SampledPositionedProperty stores the position and timestamp for each sample along the radar sample series.
     const positionProperty = new Cesium.SampledPositionProperty();
 
