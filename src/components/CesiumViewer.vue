@@ -37,6 +37,14 @@ export default {
     // The SampledPositionedProperty stores the position and timestamp for each sample along the radar sample series.
     const positionProperty = new Cesium.SampledPositionProperty();
 
+    viewer.homeButton.viewModel.command.beforeExecute.addEventListener( // Return to the balloon when the home button is pressed.
+      function(e) {
+        console.log("Return to home. ie balloon.");
+        e.cancel = true;
+        if(balloonEntity == null) return;
+        viewer.flyTo(balloonEntity);
+    });
+
     var start_time = null; // for two different socket callbacks to manipulate the start time of the animation
     var stop_time = null; // for two different socket callbacks to manipulate the stop time of the animation
     var current_time = null; // for two different socket callbacks to manipulate the current time of the animation
