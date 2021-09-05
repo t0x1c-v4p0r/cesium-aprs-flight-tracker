@@ -13,7 +13,7 @@ export default {
     msg: String
   },
   mounted: () => {
-    const socket = io();
+    const socket = io(window.location.host, {path: "/tracker/socket.io"});
 
     socket.on('connect', () => {
       console.log('connect')
