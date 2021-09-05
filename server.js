@@ -32,12 +32,6 @@ gnuradio_server.on('connection', function (socket) {
   console.log('--------------------------------------------')
 
   socket.on('data', function (new_flight_data) {
-    if(Date.now() - duplicate_preventer_timestamp_ms < buffer_time_ms) {
-      // Likely to be a digipeater
-      console.log("\x1b[33m%s\x1b[0m" , "Likely repeated packet. Ignoring: " + new_flight_data, "\x1b[37m"); // output in yellow
-      return;
-    }
-    duplicate_preventer_timestamp_ms = Date.now();
     const parser = new aprs.APRSParser();
     var flight_data_json = parser.parse(new_flight_data);
     if(flight_data_json.from == null || 
@@ -54,6 +48,12 @@ gnuradio_server.on('connection', function (socket) {
       console.log("\x1b[33m%s\x1b[0m" , "WARNING Undesired data: " + new_flight_data, "\x1b[37m"); // output in yellow
       return;
     }
+    if(Date.now() - duplicate_preventer_timestamp_ms < buffer_time_ms) {
+      // Likely to be a digipeater
+      console.log("\x1b[33m%s\x1b[0m" , "Likely repeated packet. Ignoring: " + new_flight_data, "\x1b[37m"); // output in yellow
+      return;
+    }
+    duplicate_preventer_timestamp_ms = Date.now();
     var latitude = flight_data_json.data.latitude; 
     var longitude = flight_data_json.data.longitude; 
     var altitude = flight_data_json.data.altitude; // in meters
@@ -110,8 +110,6 @@ gnuradio_server.on('error', function (error) {
 gnuradio_server.on('listening', function () {
   console.log('Server is listening!');
 });
-
-gnuradio_server.maxConnections = 1;
 
 //static port allocation
 gnuradio_server.listen(3000, '0.0.0.0');
