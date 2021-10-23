@@ -13,24 +13,23 @@ export default {
     msg: String
   },
   mounted: () => {
-    const socket = io();
+    const socket = io(window.location.host, {path: "/socket.io"});
 
     socket.on('connect', () => {
       console.log('connect')
     })
 
-    socket.on('message', (msg) => {
-      console.log('message:',msg)
-    })
-
     Cesium.Ion.defaultAccessToken = process.env.VUE_APP_ACCESS_TOKEN
 
     var viewer = new Cesium.Viewer('cesiumContainer', {
-        terrainProvider: Cesium.createWorldTerrain(),
+        sceneMode : Cesium.SceneMode.SCENE3D,
+        terrainProvider: Cesium.createWorldTerrain({
+          requestVertexNormals: true
+        }),
         scene3DOnly: false // Enable 2D and Columbus View
     });
 
-    // viewer.scene.primitives.add(Cesium.createOsmBuildings());
+    //viewer.scene.primitives.add(Cesium.createOsmBuildings());
     // The SampledPositionedProperty stores the position and timestamp for each sample along the radar sample series.
     const positionProperty = new Cesium.SampledPositionProperty();
 
@@ -56,22 +55,25 @@ export default {
         if(start_time==null) start_time = Cesium.JulianDate.fromIso8601(JSON.parse(prev_flight_points[i]).time); // Take the first flight data point as the start point. Assumes flight data is in order.
         current_time = Cesium.JulianDate.fromIso8601(JSON.parse(prev_flight_points[i]).time); // Update the current time until we reach the last timestamp
         var flight_point = JSON.parse(prev_flight_points[i]);
+        if(flight_point.height>100000)flight_point.height = 0;
         console.log(i, ': ', flight_point);
         // Declare the time for this individual sample and store it in a new JulianDate instance.
         const time = Cesium.JulianDate.fromIso8601(flight_point.time); // Assumes timestamp is in Iso8601.
         const position = Cesium.Cartesian3.fromDegrees(flight_point.longitude, flight_point.latitude, flight_point.height);
         // Store the position along with its timestamp.
+        // var comment = flight_point.comment.slice(0,-16); // Edit if necessary for your specific mission
         // Here we add the positions all upfront, but these can be added at run-time as samples are received from a server.
         positionProperty.addSample(time, position);
         viewer.entities.add({
           description: `Location: (${flight_point.longitude}, ${flight_point.latitude}, ${flight_point.height})`,
           label: {
-            text : flight_point.comment,
+            text : "Time: " + time + "; Alt: " + Math.round(flight_point.height) + " m",
             font : '14pt monospace',
             style: Cesium.LabelStyle.FILL_AND_OUTLINE,
             outlineWidth : 2,
             verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-            pixelOffset : new Cesium.Cartesian2(0, -9)
+            pixelOffset : new Cesium.Cartesian2(0, -9),
+            scaleByDistance: new Cesium.NearFarScalar(0, 1, 10000, 0.0)
           },
           position: position,
           point: { pixelSize: 10, color: Cesium.Color.RED }
@@ -105,21 +107,24 @@ export default {
 
     // New flight point received from the server
     socket.on('new_flight_point', (new_flight_point) => { //new_flight_point is JSON obj
+      if(new_flight_point.height>100000) new_flight_point.height=0;
       current_time = Cesium.JulianDate.fromIso8601(new_flight_point.time);
       const position = Cesium.Cartesian3.fromDegrees(new_flight_point.longitude, new_flight_point.latitude, new_flight_point.height);
       // Store the position along with its timestamp.
+      // var comment = new_flight_point.comment.slice(0,-16); // Edit if necessary for your specific mission
       // Add at run-time as samples are received from a server.
       positionProperty.addSample(current_time, position);
       // Plot it on the cesium app
       viewer.entities.add({
         description: `Location: (${new_flight_point.longitude}, ${new_flight_point.latitude}, ${new_flight_point.height})`,
         label: {
-          text : new_flight_point.comment,
+          text : "Time: " + current_time + "; Alt: " + Math.round(new_flight_point.height) + " m",
           font : '14pt monospace',
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
           outlineWidth : 2,
           verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-          pixelOffset : new Cesium.Cartesian2(0, -9)
+          pixelOffset : new Cesium.Cartesian2(0, -9),
+          scaleByDistance: new Cesium.NearFarScalar(0, 1, 10000, 0.0)
         },
         position: position,
         point: { pixelSize: 10, color: Cesium.Color.RED }
@@ -157,7 +162,7 @@ export default {
       viewer.clock.currentTime = current_time.clone(); // update the clock displayed in the GUI
       viewer.clock.stopTime = stop_time.clone(); // update the stop time
       viewer.trackedEntity = undefined; // Untrack any objects to make the camera flight transition smooth
-      viewer.flyTo(balloonEntity); // Teleport the camera to the balloon
+      /*viewer.flyTo(balloonEntity);*/ // Teleport the camera to the balloon
     });
   }
 }

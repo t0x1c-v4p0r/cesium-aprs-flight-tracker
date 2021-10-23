@@ -7,6 +7,7 @@ const cesiumSource = 'node_modules/cesium/Source';
 const cesiumWorkers = '../Build/Cesium/Workers';
 
 module.exports = {
+  publicPath: "./",
   configureWebpack: {
       plugins: [
           // Copy Cesium Assets, Widgets, and Workers to a static directory
